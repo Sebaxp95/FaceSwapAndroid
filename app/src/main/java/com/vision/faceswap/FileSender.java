@@ -8,6 +8,7 @@ import org.springframework.http.MediaType;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.core.io.FileSystemResource;
 
 import java.io.File;
 import java.io.IOException;
@@ -17,8 +18,8 @@ public class FileSender {
 
     public File send(File source, File destination) throws IOException {
         MultiValueMap<String, Object> body = new LinkedMultiValueMap<String, Object>() {{
-            add("src", source);
-            add("dst", destination);
+            add("src", new FileSystemResource(source));
+            add("dst", new FileSystemResource(destination));
         }};
         HttpHeaders headers = new HttpHeaders() {{
             setContentType(MediaType.MULTIPART_FORM_DATA);
