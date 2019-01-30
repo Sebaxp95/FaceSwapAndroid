@@ -1,5 +1,8 @@
 package com.vision.faceswap;
 
+import com.google.common.io.Files;
+import com.google.common.io.Resources;
+
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -15,7 +18,7 @@ import java.io.IOException;
 public class FileSender {
     private static final String URL = "https://face-swap-server.herokuapp.com/swap";
 
-    public String send(final File source, final File destination) throws IOException {
+    public File send(final File source, final File destination) throws IOException {
 
         final MultiValueMap<String, Object> body = new LinkedMultiValueMap<String, Object>() {{
             add("src", new FileSystemResource(source));
@@ -29,9 +32,14 @@ public class FileSender {
 
         final RestTemplate restTemplate = new RestTemplate(true);
 
-        return restTemplate
-                .exchange(URL, HttpMethod.POST, requestEntity, String.class)
+        byte[] image = restTemplate
+                .exchange(URL, HttpMethod.POST, requestEntity, byte[].class)
                 .getBody();
+
+        final File outputFile = new File(Resources.getResource("result.jpg").getFile());
+        Files.write(image, outputFile);
+
+        return outputFile;
     }
 
 }
