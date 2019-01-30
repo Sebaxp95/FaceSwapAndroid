@@ -1,11 +1,10 @@
 package com.vision.faceswap;
 
-import android.Manifest;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
 import android.net.Uri;
 import android.os.Bundle;
@@ -15,10 +14,11 @@ import android.provider.MediaStore;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.Toast;
 
 import java.io.File;
@@ -97,6 +97,7 @@ public class MainActivity extends AppCompatActivity {
                 public void onClick(View view) {
                     try {
                         File f = new FileSender().send(fileSrc, fileDst);
+                        showResult(f);
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
@@ -110,6 +111,12 @@ public class MainActivity extends AppCompatActivity {
         matrix.postRotate(angle);
         return Bitmap.createBitmap(source, 0, 0, source.getWidth(), source.getHeight(),
                 matrix, true);
+    }
+
+    public void showResult(File imgFile){
+        Bitmap myBitmap = BitmapFactory.decodeFile(imgFile.getAbsolutePath());
+        ImageView myImage = (ImageView) findViewById(R.id.result);
+        myImage.setImageBitmap(myBitmap);
     }
 
 
