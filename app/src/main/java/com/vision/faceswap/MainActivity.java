@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
+import android.media.ExifInterface;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
@@ -21,7 +22,9 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.Toast;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -71,9 +74,31 @@ public class MainActivity extends AppCompatActivity {
         }
         Bitmap mImageBitmap;
         try {
+            ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+
             mImageBitmap = MediaStore.Images.Media.getBitmap(this.getContentResolver(), Uri.parse(mCurrentPhotoPath));
             if (mImageBitmap != null) {
-                mImageBitmap = rotateImage(mImageBitmap, 90);
+
+
+                ExifInterface ei = new ExifInterface(mCurrentPhotoPath.replace("file:", ""));
+                int orientation = ei.getAttributeInt(ExifInterface.TAG_ORIENTATION,
+                        ExifInterface.ORIENTATION_UNDEFINED);
+
+                switch(orientation) {
+                    case ExifInterface.ORIENTATION_ROTATE_90:
+                        mImageBitmap = rotateImage(mImageBitmap, 90);
+                        break;
+
+                    case ExifInterface.ORIENTATION_ROTATE_180:
+                        mImageBitmap = rotateImage(mImageBitmap, 180);
+                        break;
+
+                    case ExifInterface.ORIENTATION_ROTATE_270:
+                        mImageBitmap = rotateImage(mImageBitmap, 270);
+                        break;
+                }
+
+                //mImageBitmap = rotateImage(mImageBitmap, 270);
                 int imageHeight = mImageBitmap.getHeight();
                 int imageWidth = mImageBitmap.getWidth();
                 int scaledHeight = imButton1.getHeight() - 30;
@@ -81,12 +106,27 @@ public class MainActivity extends AppCompatActivity {
                 int scaledWidth = imageWidth / scale;
 
                 mImageBitmap = Bitmap.createScaledBitmap(mImageBitmap, scaledWidth, scaledHeight, true);
+                mImageBitmap.compress(Bitmap.CompressFormat.JPEG, 50, byteArrayOutputStream);
 
                 if (requestCode == 1) {
                     imButton1.setImageBitmap(mImageBitmap);
+
+                    FileOutputStream fileOutputStream = new FileOutputStream(fileSrc);
+                    fileOutputStream.write(byteArrayOutputStream.toByteArray());
+                    fileOutputStream.flush();
+                    fileOutputStream.close();
+                    System.out.println(fileSrc.length());
+
                 } else if (requestCode == 2) {
                     imButton2.setImageBitmap(mImageBitmap);
+                    FileOutputStream fileOutputStream = new FileOutputStream(fileDst);
+                    fileOutputStream.write(byteArrayOutputStream.toByteArray());
+                    fileOutputStream.flush();
+                    fileOutputStream.close();
+                    System.out.println(fileDst.length());
+
                 }
+
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -96,7 +136,7 @@ public class MainActivity extends AppCompatActivity {
                 @Override
                 public void onClick(View view) {
                     try {
-                        File f = new FileSender().send(fileSrc, fileDst);
+                        File f = new FileSender().send(fileSrc, fileDst, getApplicationContext());
                         showResult(f);
                     } catch (IOException e) {
                         e.printStackTrace();
